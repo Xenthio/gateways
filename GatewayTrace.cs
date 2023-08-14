@@ -320,16 +320,17 @@ public class GatewayTraceResult
 
 	public TraceResult AsTraceResult()
 	{
-		var b = Results.First();
+		var b = Results.Last();
 		b.StartedSolid = StartedSolid;
 		//b.Distance = Distance;
 		b.StartPosition = StartPosition;
-		b.EndPosition = EndPosition;
-		b.HitPosition = HitPosition;
+		b.EndPosition = EndPosition+(Normal * 0.01f);
+		b.HitPosition = HitPosition+(Normal * 0.01f);
 		b.Hit = Hit;
 		b.Fraction = Fraction;
 		b.Normal = Normal;
 		b.Entity = Entity;
+		Log.Info(b.Entity);
 		return b;
 	}
 }

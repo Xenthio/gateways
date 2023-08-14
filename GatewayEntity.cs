@@ -1,7 +1,10 @@
-using Editor;
-using Sandbox;
+
 using System.Collections.Generic;
 using System.Linq;
+using Sandbox;
+using Editor;
+using System.Drawing;
+
 
 [HammerEntity,Solid]
 public partial class GatewayEntity : ModelEntity
@@ -13,10 +16,16 @@ public partial class GatewayEntity : ModelEntity
 	public GatewayEntity TargetGatewayEntity { get; set; }
 
 	public ScenePortal PortalView;
+	Model PortalModel;
 	public override void Spawn()
 	{
 		base.Spawn();
 		SetupPhysicsFromModel(PhysicsMotionType.Keyframed);
+		PortalModel = MakeModel();
+		var size = CollisionBounds.Size;
+		size.x = 0.01f;
+		var box = BBox.FromPositionAndSize(Vector3.Zero, size);
+		SetupPhysicsFromOBB(PhysicsMotionType.Keyframed, box.Mins, box.Maxs);
 		TargetGatewayEntity = TargetGateway.GetTarget<GatewayEntity>();
 		if (TargetGatewayEntity != null )
 		{
@@ -30,9 +39,9 @@ public partial class GatewayEntity : ModelEntity
 	{
 		var m = new Mesh();
 
-		VertexBuffer buf = new();
-		buf.Init(true);
 
+		VertexBuffer buf = new();
+		buf.Init(false);
 		var v1 = new Vertex(CollisionBounds.Corners.ElementAt(0));
 		var v2 = new Vertex(CollisionBounds.Corners.ElementAt(3));
 		var v3 = new Vertex(CollisionBounds.Corners.ElementAt(7));
@@ -41,10 +50,32 @@ public partial class GatewayEntity : ModelEntity
 		buf.Add(v2);
 		buf.Add(v3);
 		buf.Add(v4);
+		m.CreateBuffers(buf);
+		return Model.Builder.AddMesh(m).Create();
+	}
+	Model MakeModelExperimental()
+	{
+		var m = new Mesh();
+		 
 
+		VertexBuffer buf = new();
+		buf.Init(true);
+		buf.Clear();
+
+		var size = CollisionBounds.Size;
+		size.x = 0.01f;
+		Log.Info(size); 
+		buf.AddCube(Vector3.Zero, size, Rotation.Identity); 
+		 
+		//buf.Default.Position = Vector3.Zero;
+		buf.Default.Normal = Rotation.Forward;
 		m.CreateBuffers(buf);
 
-		return Model.Builder.AddMesh(m).Create();
+		var model = Model.Builder;
+		model.AddMesh(m);
+		model.AddCollisionBox( size/2, new Vector3(size.x/2), Rotation.Identity);
+
+		return model.Create();
 	}
 	public override void ClientSpawn()
 	{ 
@@ -55,10 +86,17 @@ public partial class GatewayEntity : ModelEntity
 	[GameEvent.Client.Frame]
 	public void FramePortal()
 	{
-
-		if (PortalView == null && TargetGatewayEntity != null && Model != null)
+		//return;
+		if (TargetGatewayEntity == null) return;
+		if (Model == null) return;
+		if (PortalModel == null)
 		{
-			PortalView = new ScenePortal(Game.SceneWorld, MakeModel(), Transform, false, 2560);
+			PortalModel = MakeModel();
+		}
+
+		if (PortalView == null)
+		{
+			PortalView = new ScenePortal(Game.SceneWorld, PortalModel, Transform, false, 2560);
 			PortalView.Flags.WantsFrameBufferCopy = true;
 			PortalView.Flags.CastShadows = false; 
 		}

@@ -329,8 +329,7 @@ public class GatewayTraceResult
 		b.Hit = Hit;
 		b.Fraction = Fraction;
 		b.Normal = Normal;
-		b.Entity = Entity;
-		Log.Info(b.Entity);
+		b.Entity = Entity; 
 		return b;
 	}
 }

@@ -98,7 +98,8 @@ public partial class GatewayEntity : ModelEntity
 		{
 			PortalView = new ScenePortal(Game.SceneWorld, PortalModel, Transform, true, 2560);
 			PortalView.Flags.WantsFrameBufferCopy = true;
-			PortalView.Flags.CastShadows = false; 
+			PortalView.Flags.CastShadows = false;
+			this.EnableShadowCasting = false;
 		}
 		if (PortalView == null) return;
 		var trn = new Transform(Camera.Position, Camera.Rotation);

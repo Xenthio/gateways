@@ -96,7 +96,7 @@ public partial class GatewayEntity : ModelEntity
 
 		if (PortalView == null)
 		{
-			PortalView = new ScenePortal(Game.SceneWorld, PortalModel, Transform, false, 2560);
+			PortalView = new ScenePortal(Game.SceneWorld, PortalModel, Transform, true, 2560);
 			PortalView.Flags.WantsFrameBufferCopy = true;
 			PortalView.Flags.CastShadows = false; 
 		}

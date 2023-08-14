@@ -12,10 +12,12 @@ public class GatewayTrace
 {
 	public Vector3 StartPosition;
 	public Vector3 EndPosition;
+	public Rotation StartRotation;
 	public Entity IgnoreEntity;
 	public BBox BBox;
 	public string[] WithoutTagsList;
 	public string[] WithAnyTagsList;
+	public bool UsesHitboxes = false;
 
 	public TraceType TraceType = TraceType.Ray;
 	public static GatewayTrace Ray(Vector3 StartPosition, Vector3 EndPosition)
@@ -66,7 +68,12 @@ public class GatewayTrace
 		b.WithoutTagsList = tags;
 		return b;
 	}
-
+	public GatewayTrace UseHitboxes()
+	{
+		var b = this;
+		b.UsesHitboxes = true;
+		return b;
+	}
 	public GatewayTrace Ignore(Entity ent)
 	{
 		var b = this;
@@ -93,6 +100,8 @@ public class GatewayTrace
 
 		var b = new GatewayTraceResult();
 		b.StartPosition = StartPosition;
+		b.StartRotation = StartRotation;
+		b.EndRotation = StartRotation;
 
 		bool isDone = false;
 		var pos1 = StartPosition;
@@ -116,12 +125,16 @@ public class GatewayTrace
 			{
 				pretr = pretr.WithAnyTags(WithAnyTagsList);
 			}
+			if (UsesHitboxes)
+			{
+				pretr = pretr.UseHitboxes();
+			}
 			var tr = pretr.Run();
 			dist += tr.Distance;
 			b.Results.Add(tr);
-			DebugOverlay.Line(pos1, pos2, 5);
+			//DebugOverlay.Line(pos1, pos2, 5);
 			pos1 = tr.StartPosition;
-			pos2 = tr.EndPosition;
+			pos2 = tr.EndPosition; 
 			if (tr.Entity is GatewayEntity gateway)
 			{
 				Log.Info("hit gateway");
@@ -129,7 +142,7 @@ public class GatewayTrace
 				{
 					Log.Info("gateway we hit has no output");
 					break;
-				}
+				} 
 				ignore = gateway.TargetGatewayEntity;
 
 				var localp1 = gateway.Transform.PointToLocal(tr.HitPosition);
@@ -146,6 +159,27 @@ public class GatewayTrace
 
 				pos2 = gateway.TargetGatewayEntity.Transform.PointToWorld(localp2);
 
+
+				var Forward = StartRotation.Forward + gateway.Position;
+
+				Forward = gateway.Transform.PointToLocal(Forward);
+
+				Forward = Vector3.Reflect(Forward, gateway.TargetGatewayEntity.Rotation.Right);
+				Forward = Vector3.Reflect(Forward, gateway.TargetGatewayEntity.Rotation.Forward);
+
+				Forward = gateway.TargetGatewayEntity.Transform.PointToWorld(Forward) - gateway.TargetGatewayEntity.Position;
+
+				var Up = StartRotation.Up + gateway.Position;
+
+				Up = gateway.Transform.PointToLocal(Up);
+
+				Up = Vector3.Reflect(Up, gateway.TargetGatewayEntity.Rotation.Right);
+				Up = Vector3.Reflect(Up, gateway.TargetGatewayEntity.Rotation.Forward);
+
+				Up = gateway.TargetGatewayEntity.Transform.PointToWorld(Up) - gateway.TargetGatewayEntity.Position;
+
+				b.EndRotation = Rotation.LookAt(Forward, Up);
+
 				if (depth < 64) isDone = false;
 			}
 			b.Entity = tr.Entity;
@@ -154,6 +188,9 @@ public class GatewayTrace
 			b.Hit = tr.Hit;
 			b.StartedSolid = tr.StartedSolid;
 			b.Direction = tr.Direction;
+			b.Bone = tr.Bone;
+			b.Surface = tr.Surface;
+			b.Hitbox = tr.Hitbox;
 		}
 		b.Depth = depth;
 		b.Distance = dist;
@@ -166,6 +203,8 @@ public class GatewayTrace
 
 		var b = new GatewayTraceResult();
 		b.StartPosition = StartPosition;
+		b.StartRotation = StartRotation;
+		b.EndRotation = StartRotation;
 
 		bool isDone = false;
 		var pos1 = StartPosition;
@@ -179,7 +218,8 @@ public class GatewayTrace
 			depth++;
 
 			isDone = true;
-			var pretr = Trace.Ray(pos1, pos2).Size(BBox).Ignore(ignore).Ignore(IgnoreEntity);
+			var pretr = Trace.Ray(pos1, pos2).Ignore(ignore).Ignore(IgnoreEntity);
+			//pretr = pretr.Size(BBox);
 			if (WithoutTagsList != null)
 			{
 				pretr = pretr.WithoutTags(WithoutTagsList);
@@ -189,12 +229,16 @@ public class GatewayTrace
 			{
 				pretr = pretr.WithAnyTags(WithAnyTagsList);
 			}
+			if (UsesHitboxes)
+			{
+				pretr = pretr.UseHitboxes();
+			}
 			var tr = pretr.Run();
 			dist += tr.Distance;
 			b.Results.Add(tr);
-			DebugOverlay.Line(pos1, pos2, 5);
+			//DebugOverlay.Line(pos1, pos2, 5);
 			pos1 = tr.StartPosition;
-			pos2 = tr.EndPosition;
+			pos2 = tr.EndPosition; 
 			if (tr.Entity is GatewayEntity gateway)
 			{
 				Log.Info("hit gateway");
@@ -202,7 +246,7 @@ public class GatewayTrace
 				{
 					Log.Info("gateway we hit has no output");
 					break;
-				}
+				} 
 				ignore = gateway.TargetGatewayEntity;
 
 				var localp1 = gateway.Transform.PointToLocal(tr.HitPosition);
@@ -220,6 +264,27 @@ public class GatewayTrace
 
 				pos2 = gateway.TargetGatewayEntity.Transform.PointToWorld(localp2);
 
+
+				var Forward = StartRotation.Forward + gateway.Position;
+
+				Forward = gateway.Transform.PointToLocal(Forward);
+
+				Forward = Vector3.Reflect(Forward, gateway.TargetGatewayEntity.Rotation.Right);
+				Forward = Vector3.Reflect(Forward, gateway.TargetGatewayEntity.Rotation.Forward);
+
+				Forward = gateway.TargetGatewayEntity.Transform.PointToWorld(Forward) - gateway.TargetGatewayEntity.Position;
+
+				var Up = StartRotation.Up + gateway.Position;
+
+				Up = gateway.Transform.PointToLocal(Up);
+
+				Up = Vector3.Reflect(Up, gateway.TargetGatewayEntity.Rotation.Right);
+				Up = Vector3.Reflect(Up, gateway.TargetGatewayEntity.Rotation.Forward);
+
+				Up = gateway.TargetGatewayEntity.Transform.PointToWorld(Up) - gateway.TargetGatewayEntity.Position;
+
+				b.EndRotation = Rotation.LookAt(Forward, Up);
+
 				if (depth < 64) isDone = false;
 			}
 			b.Entity = tr.Entity;
@@ -228,10 +293,13 @@ public class GatewayTrace
 			b.Hit = tr.Hit;
 			b.StartedSolid = tr.StartedSolid;
 			b.Direction = tr.Direction;
-			b.EndPosition = tr.EndPosition;
+			b.EndPosition = tr.EndPosition;  
+			b.Bone = tr.Bone;
+			b.Surface = tr.Surface;
+			b.Hitbox = tr.Hitbox;
 		}
 		b.Depth = depth;
-		b.Distance = dist;
+		b.Distance = dist; 
 
 		var trray = GatewayTrace.Ray(StartPosition, EndPosition).Ignore(IgnoreEntity).Run();
 		if (depth > 1)
@@ -304,8 +372,9 @@ public class GatewayTraceResult
 	public Vector3 EndPosition;
 	public Vector3 HitPosition;
 
-	public Vector3 StartRotation;
-	public Vector3 EndRotation;
+	public Rotation StartRotation;
+	public Rotation EndRotation;
+
 	public bool Hit;
 	public bool StartedSolid;
 	public Vector3 Direction;
@@ -317,6 +386,10 @@ public class GatewayTraceResult
 
 	public float Fraction;
 	public Vector3 Normal;
+
+	public Surface Surface;
+	public Hitbox Hitbox;
+	public int Bone;
 
 	public TraceResult AsTraceResult()
 	{
